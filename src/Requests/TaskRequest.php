@@ -29,10 +29,9 @@ class TaskRequest {
         return $this->request->toArray()['name'];
     }
 
-    #[Constraints\Length(min: 100, max: 250, minMessage: 'Description too short.', maxMessage: 'Description too long')]
+    #[Constraints\Length(min: 2, max: 250, minMessage: 'Description too short.', maxMessage: 'Description too long')]
     public function getDescription() {
-        return $this->request->attributes->get('name');
-    }
+        return $this->request->toArray()['name'];    }
 
     #[Constraints\Length(min: 100, minMessage: 'Name too short.')]
     public function getParentTaskId() {
