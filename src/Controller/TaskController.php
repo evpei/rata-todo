@@ -2,104 +2,67 @@
 
 namespace App\Controller;
 
-use App\Contracts\DTO;
-use App\DTO\TaskDTO;
+use App\DTO\TaskRequestDTO;
 use App\Entity\Task;
-use App\Enums\ResponseError;
 use App\Repository\TaskRepository;
 use App\Resources\Tasks\TaskResource;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('task', name: 'task.')]
 class TaskController extends AbstractController
 {
-
     public function __construct(
         private TaskRepository $taskRepository,
         private TaskResource $taskResource,
+        private ValidatorInterface $validator,
     ) {
     }
 
     #[Route('', name: 'index', methods: 'GET')]
     public function index(): JsonResponse
     {
-        $tasks = $this->taskRepository
-        ->getParentTasks()
-        ->map(fn (Task $task) => TaskDTO::fromEntity($task))
-        ->toArray();
+        $this->taskResource->buildResourcesArray(...$this->taskRepository->getWithSubTask());
 
-        return $this->json([
-            'data' => $this->taskResource->toResourcesArray(...$tasks),
-        ], Response::HTTP_OK);
+        return $this->taskResponse(Response::HTTP_OK);
     }
 
-    #[Route('/{taskId}', name: 'show', methods: 'GET', requirements: ["taskId" => "\d+"])]
-    public function show(int $taskId): JsonResponse
+    #[Route('/{task}', name: 'show', methods: 'GET', requirements: ["taskId" => "\d+"])]
+    public function show(Task $task): JsonResponse
     {
-        $task = $this->taskRepository->findOneBy(['id' => $taskId]);
+        $this->taskResource->buildResourceArray($task->toDTO());
 
-        if (!$task) {
-            return $this->jsonError(ResponseError::HTTP_NOT_FOUND);
-        }
-
-        return $this->json(['data' => $this->taskResource->toResourceArray(TaskDto::fromEntity($task))]);
+        return $this->taskResponse(Response::HTTP_OK);
     }
 
     #[Route('', name: 'store', methods: 'POST')]
-    public function store(Request $request): JsonResponse
+    public function store(TaskRequestDTO $taskRequestDto): JsonResponse
     {
-        return $this->json($request->toArray());
-        if(! $request->attributes->get('name')) {
-            return $this->jsonError(ResponseError::HTTP_BAD_REQUEST);
-        }
+        $this->taskResource->buildResourceArray($this->taskRepository->store($taskRequestDto));
 
-        $task = new TaskDTO(name: $request->get('name'), description: $request->get('description'), parentTaskId: $request->get('parentTaskId'));
-        $storedTask = TaskDTO::fromEntity($this->taskRepository->store($task));
-        
-        return $this->json($this->taskResource->toResourceArray($storedTask), Response::HTTP_CREATED);
+        return $this->taskResponse(Response::HTTP_CREATED);
     }
 
-    #[Route('/{taskId}', name: 'update', methods: 'PUT', requirements: ['taskId' => '\d+'])]
-    public function update(int $taskId, Request $request): JsonResponse
+    #[Route('/{task}', name: 'update', methods: 'PUT',)]
+    public function update(Task $task, TaskRequestDTO $updateTaskDto): JsonResponse
     {
-        $task = $this->taskRepository->findOneBy(['id' => $taskId]);
+        $this->taskResource->buildResourceArray($task->toDTO());
 
-        if (!$task) {
-            return $this->jsonError(ResponseError::HTTP_NOT_FOUND);
-        }
-
-        return $this->json([
-            'name' => 'Welcome to your new controller!',
-        ], Response::HTTP_OK);
+        return $this->taskResponse(Response::HTTP_OK);
     }
 
-    #[Route('/{taskId}', name: 'delete', methods: 'DELETE', requirements: ["taskId" => "\d+"])]
-    public function delete(int $taskId): JsonResponse
+    #[Route('/{task}', name: 'delete', methods: 'DELETE', requirements: ["taskId" => "\d+"])]
+    public function delete(Task $task): JsonResponse
     {
-        $task = $this->taskRepository->findOneBy(['id' => $taskId]);
+        $this->taskRepository->delete($task);
 
-        if (!$task) {
-            throw $this->createNotFoundException();
-            return $this->jsonError(ResponseError::HTTP_NOT_FOUND);
-        }
-
-        return $this->json([
-            'name' => 'Welcome to your new controller!',
-        ], Response::HTTP_OK);
+        return $this->taskResponse(Response::HTTP_NO_CONTENT);
     }
 
-    private function jsonError(ResponseError $responseError): JsonResponse
-    {
-        return $this->json(['error' => [
-            'message' => $responseError->getMessage(),
-            'code' => $responseError->getStatusCode(),
-        ]], $responseError->getStatusCode());
+    private function taskResponse(int $statusCode = Response::HTTP_OK): JsonResponse {
+        return $this->json([$this->taskResource->getResourceData()], $statusCode);
     }
 }

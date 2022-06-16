@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\DTO\TaskDTO;
+use App\DTO\TaskRequestDTO;
 use App\Entity\Task;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -41,16 +42,50 @@ class TaskRepository extends ServiceEntityRepository
         }
     }
 
-    public function store(TaskDTO $taskDTO): Task {
+    public function store(TaskRequestDTO $taskDTO): TaskDTO {
         $task = new Task(['name' => $taskDTO->name, 'description' => $taskDTO->description, 'parent_task_id' => $taskDTO->parentTaskId]);
+
+        $this->getEntityManager()->persist($task);
 
         $this->getEntityManager()->flush();
 
-        return $task;
+        return $task->toDTO();
     }
 
-    public function getParentTasks(): ArrayCollection {
-        return new ArrayCollection($this->createQueryBuilder('tasks')->where('tasks.parentTask IS NULL')->getQuery()->getResult());
+    public function update(TaskRequestDTO $taskDTO): TaskDTO {
+        $task = new Task(['name' => $taskDTO->name, 'description' => $taskDTO->description, 'parent_task_id' => $taskDTO->parentTaskId]);
+
+        $this->getEntityManager()->persist($task);
+
+        $this->getEntityManager()->flush();
+
+        return $task->toDTO();
+    }
+
+    public function delete(Task $task): void {
+
+        $this->getEntityManager()->remove($task);
+
+        $this->getEntityManager()->flush();
+    }
+
+
+
+    /**
+     * Returns all the subtasks
+     * 
+     * Todo: The Tasks must be associated to an user entity
+     *
+     * @return TaskDto[]
+     */
+    public function getWithSubTask(): array {
+        return (new ArrayCollection($this->createQueryBuilder('tasks')
+        ->where('tasks.parentTask IS NULL')
+        ->getQuery()
+        ->getResult()))
+        ->filter(fn ($task) => $task instanceof Task)
+        ->map(fn (Task $task) => $task->toDTO())
+        ->toArray();
     }
 
 //    /**

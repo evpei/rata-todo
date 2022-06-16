@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\DTO\TaskDTO;
 use App\Repository\TaskRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -101,5 +102,17 @@ class Task
         }
 
         return $this;
+    }
+
+    public function toDTO(): TaskDTO 
+    {
+        return new TaskDTO(
+            $this->getId(),
+            $this->getName(),
+            $this->getDescription(),
+            $this->getSubTasks()
+            ->filter(fn ($task) => $task && $task instanceof self)
+            ->map(fn (self $task) => new TaskDTO($task->getId(), $task->getName(), $task->getDescription()))
+        );
     }
 }

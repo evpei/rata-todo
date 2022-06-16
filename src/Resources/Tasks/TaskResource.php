@@ -7,8 +7,18 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 class TaskResource
 {
+    public function __construct(private array $resourceData = [])
+    {}
 
-    public function toResourceArray(TaskDTO $taskDTO): array
+    public function buildResourceArray(TaskDTO $taskDTO): void
+    {
+        $this->resourceData = [
+            ...$this->taskBaseData($taskDTO->id, $taskDTO->name, $taskDTO->description),
+            'tasks' => $taskDTO->subTasks->map(fn (TaskDto $subTask) => $this->taskBaseData($subTask->id, $subTask->name, $subTask->description))->toArray(),
+        ];
+    }
+
+    private function getResourceArray(TaskDTO $taskDTO): array
     {
         return [
             ...$this->taskBaseData($taskDTO->id, $taskDTO->name, $taskDTO->description),
@@ -16,14 +26,16 @@ class TaskResource
         ];
     }
 
-    public function toResourcesArray(TaskDTO ...$tasks): array
+    public function buildResourcesArray(TaskDTO ...$tasks): void
     {
-        return (new ArrayCollection($tasks))
-        ->map(fn (TaskDTO $task) => self::toResourceArray($task))
+        $this->resourceData = (new ArrayCollection($tasks))
+        ->map(fn (TaskDTO $task) => $this->getResourceArray($task))
         ->toArray();
     }
 
-
+    public function getResourceData(): array {
+        return $this->resourceData;
+    }
 
     private function taskBaseData(int $id, string $name, ?string $description): array
     {
