@@ -20,8 +20,6 @@ class TokenSubscriber implements EventSubscriberInterface
     {
         $controller = $event->getController();
 
-        // when a controller class defines multiple action methods, the controller
-        // is returned as [$controllerInstance, 'methodName']
         if (is_array($controller)) {
             $controller = $controller[0];
         }
@@ -31,7 +29,7 @@ class TokenSubscriber implements EventSubscriberInterface
             $user = $this->userRepository->findOneBy(['apiKey' => $apiKey]);
 
             if (!$user) {
-                throw new HttpException('Api-Key invalid.', code: Response::HTTP_UNAUTHORIZED);
+                throw new HttpException(Response::HTTP_UNAUTHORIZED, 'Api-Key invalid.');
             }
         }
     }
