@@ -14,8 +14,8 @@ class TaskResource implements JsonResource
     public function toArray(): array
     {
         return [
-            ...$this->taskBaseData($this->taskDTO->id, $this->taskDTO->name, $this->taskDTO->description),
-            'tasks' => $this->taskDTO->subTasks->map(fn (TaskDto $subTask) => $this->taskBaseData($subTask->id, $subTask->name, $subTask->description))->toArray(),
+            ...$this->taskBaseData($this->taskDTO->id, $this->taskDTO->name, $this->taskDTO->description, $this->taskDTO->completedAt),
+            'tasks' => $this->taskDTO->subTasks->map(fn (TaskDto $subTask) => $this->taskBaseData($subTask->id, $subTask->name, $subTask->description, $subTask->completedAt))->toArray(),
         ];
     }
     

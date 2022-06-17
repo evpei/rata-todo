@@ -6,7 +6,6 @@ use RuntimeException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
-use Symfony\Component\Validator\Exception\ValidationFailedException;
 
 class ValidationFailedHttpException extends RuntimeException implements HttpExceptionInterface
 {

@@ -6,7 +6,6 @@ use App\DTO\TaskDTO;
 use App\DTO\TaskRequestDTO;
 use App\Entity\Task;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**

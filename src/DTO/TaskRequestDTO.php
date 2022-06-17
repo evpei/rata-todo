@@ -20,6 +20,6 @@ class TaskRequestDTO implements DTO
         $this->description = $request->getDescription();
         $this->parentTaskId = $request->getParentTaskId();
         $this->owner = $request->getOwner();
-        $this->completedAt = new DateTimeImmutable($request->getCompletedAt());
+        $this->completedAt = $request->getCompletedAt() !== null ? new DateTimeImmutable($request->getCompletedAt()) : null;
     }
 }
