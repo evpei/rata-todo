@@ -15,3 +15,10 @@ Todo-list rest api.
 1. Open `https://localhost`  in your favorite web browser and [accept the auto-generated TLS certificate](https://stackoverflow.com/a/15076602/1352334)(dont forget to use the correct port if you defined a different HTTPS Port to expose.)
 1. Run `docker-compose down --remove-orphans` to stop the Docker containers.
 
+
+## Local setup
+To set up the local database, you need to run the following commands to migrate the Database Schema, and then load Testdata in the database.
+
+1.  `php bin/console doctrine:migrations:migrate`
+2.  `php bin/console doctrine:fixtures:load`
+
