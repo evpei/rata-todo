@@ -2,6 +2,7 @@
 
 namespace App\Requests;
 
+use App\Repository\TaskRepository;
 use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -16,6 +17,7 @@ class TaskRequest extends ApiKeyRequest
         ?RequestStack $requestStack,
         private ValidatorInterface $validator,
         private UserRepository $userRepository,
+        private TaskRepository $taskRepository,
     ) {
         $this->request = $requestStack->getCurrentRequest();
         parent::__construct($requestStack, $validator, $userRepository);
@@ -41,6 +43,15 @@ class TaskRequest extends ApiKeyRequest
     public function getParentTaskId()
     {
         return $this->request->toArray()['parent_task_id'] ?? null;
+    }
+
+    #[Constraints\NotNull(message: 'Parent task does not exist.')]
+    public function getParentTask() {
+        if(!$this->getParentTaskId()) {
+            return null;
+        }
+
+        return $this->taskRepository->find($this->getParentTaskId());
     }
 
     #[Constraints\DateTime(message: '{{ value }} must be a DateTime.')]

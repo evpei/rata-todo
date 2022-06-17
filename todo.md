@@ -1,25 +1,19 @@
-namespace App\Controller;
+##### General
 
-interface TokenAuthenticatedController
-{
-    // ...
-}### TODO
-
-##### Implementation
-- DTO to persist the request Data
-  + Factory, Static Constructor, Named Arguments in Constructor
-
-
+- Move Authorization from controller to somewhere else
+- Add Pagination / Filter / Sort functionality
+- Improve Security
+- Add api-ratelimitting
 
 ##### Security
 - Validation
 - Tokenbased Auth
-  + "Middleware" or other Security mechanism
   + Adjust the UserProvider to retrieve the User
   + Service to save API Keys encryped in DB
+- Api-Ratelimitting
   
 ##### Testing 
   + Unit Tests
-  + Integration Tests?
-  + TestData (Use Fixtures for that) 
+  + Integration Tests
+  + Application Tests
 

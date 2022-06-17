@@ -43,8 +43,8 @@ class TaskController extends ApiController
     #[Route('', name: 'store', methods: 'POST')]
     public function store(TaskRequestDTO $taskRequestDto): JsonResponse
     {
-        if($taskRequestDto->parentTaskId) {
-            $this->authorizeParentTaskAccess($taskRequestDto->owner, $taskRequestDto->parentTaskId);
+        if($taskRequestDto->parentTask) {
+            $this->authorizeAccess($taskRequestDto->owner, $taskRequestDto->parentTask);
         }
 
         $taskDTO = $this->taskRepository->store($taskRequestDto);
@@ -57,20 +57,20 @@ class TaskController extends ApiController
     {
         $this->authorizeAccess($taskRequestDto->owner, $task);
 
-        if($taskRequestDto->parentTaskId) {
-            $this->authorizeParentTaskAccess($taskRequestDto->owner, $taskRequestDto->parentTaskId);
+        if($taskRequestDto->parentTask) {
+            $this->authorizeAccess($taskRequestDto->owner, $taskRequestDto->parentTask);
         }
 
         $updatedTaskDTO = $this->taskRepository->update($task, $taskRequestDto);
 
-        return $this->formattedJsonResponse(new TaskResource($updatedTaskDTO), Response::HTTP_OK);
+        return $this->formattedJsonResponse(new TaskResource($updatedTaskDTO));
     }
 
     #[Route('/{task}', name: 'delete', methods: 'DELETE')]
     public function delete(Task $task, ApiKeyRequest $request): JsonResponse
     {
         $this->authorizeAccess($request->getOwner(), $task);
-
+        
         $this->taskRepository->delete($task);
 
         return $this->formattedJsonResponse(statusCode: Response::HTTP_NO_CONTENT);
@@ -89,14 +89,5 @@ class TaskController extends ApiController
         if (!$user->getId() || $user->getId() !== $task->getOwner()->getId()) {
             throw $this->createAccessDeniedHttpException('User is not authorized to view this resource.');
         }
-    }
-
-    protected function authorizeParentTaskAccess(User $user, int $parentTaskId): void
-    {
-        if(!$parentTask = $this->taskRepository->find($parentTaskId)) {
-            throw $this->throwValidationException('ParentTask cannot be found.');
-        }
-
-        $this->authorizeAccess($user, $parentTask);
     }
 }

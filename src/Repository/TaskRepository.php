@@ -55,7 +55,7 @@ class TaskRepository extends ServiceEntityRepository
     private function fillFromTaskRequestDto(Task $task, TaskRequestDTO $taskRequestDTO): void {
         $task->setName($taskRequestDTO->name);
         $task->setDescription($taskRequestDTO->description);
-        $task->setParentTask($this->find($taskRequestDTO->parentTaskId));
+        $task->setParentTask($taskRequestDTO->parentTask);
         $task->setOwner($taskRequestDTO->owner);
         $task->setCompletedAt($taskRequestDTO->completedAt);
     }
@@ -70,6 +70,9 @@ class TaskRepository extends ServiceEntityRepository
 
     public function delete(Task $task): void {
 
+       foreach ($task->getSubTasks() as $subTask) {
+            $this->delete($subTask);
+        }
         $this->getEntityManager()->remove($task);
 
         $this->getEntityManager()->flush();
