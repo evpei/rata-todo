@@ -42,8 +42,9 @@ class TaskRepository extends ServiceEntityRepository
         }
     }
 
-    public function store(TaskRequestDTO $taskDTO): TaskDTO {
-        $task = new Task(['name' => $taskDTO->name, 'description' => $taskDTO->description, 'parent_task_id' => $taskDTO->parentTaskId]);
+    public function store(TaskRequestDTO $taskRequestDTO): TaskDTO {
+        $task = new Task();
+        $this->fillFromTaskRequestDto($task, $taskRequestDTO);
 
         $this->getEntityManager()->persist($task);
 
@@ -52,11 +53,17 @@ class TaskRepository extends ServiceEntityRepository
         return $task->toDTO();
     }
 
-    public function update(TaskRequestDTO $taskDTO): TaskDTO {
-        $task = new Task(['name' => $taskDTO->name, 'description' => $taskDTO->description, 'parent_task_id' => $taskDTO->parentTaskId]);
+    private function fillFromTaskRequestDto(Task $task, TaskRequestDTO $taskRequestDTO): void {
+        $task->setName($taskRequestDTO->name);
+        $task->setDescription($taskRequestDTO->description);
+        $task->setParentTask($this->find($taskRequestDTO->parentTaskId));
+        $task->setOwner($taskRequestDTO->owner);
+        $task->setCompletedAt($taskRequestDTO->completedAt);
+    }
 
-        $this->getEntityManager()->persist($task);
+    public function update(Task $task, TaskRequestDTO $taskRequestDTO): TaskDTO {
 
+        $this->fillFromTaskRequestDto($task, $taskRequestDTO);
         $this->getEntityManager()->flush();
 
         return $task->toDTO();
@@ -68,48 +75,4 @@ class TaskRepository extends ServiceEntityRepository
 
         $this->getEntityManager()->flush();
     }
-
-
-
-    /**
-     * Returns all the subtasks
-     * 
-     * Todo: The Tasks must be associated to an user entity
-     *
-     * @return TaskDto[]
-     */
-    public function getWithSubTask(): array {
-        return (new ArrayCollection($this->createQueryBuilder('tasks')
-        ->where('tasks.parentTask IS NULL')
-        ->getQuery()
-        ->getResult()))
-        ->filter(fn ($task) => $task instanceof Task)
-        ->map(fn (Task $task) => $task->toDTO())
-        ->toArray();
-    }
-
-//    /**
-//     * @return Task[] Returns an array of Task objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('t.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Task
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
 }

@@ -28,6 +28,13 @@ class Task
     #[ORM\OneToMany(mappedBy: 'parentTask', targetEntity: self::class)]
     private $subTasks;
 
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'tasks')]
+    #[ORM\JoinColumn(nullable: false)]
+    private $owner;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private $completedAt;
+
     public function __construct()
     {
         $this->subTasks = new ArrayCollection();
@@ -109,10 +116,36 @@ class Task
         return new TaskDTO(
             $this->getId(),
             $this->getName(),
+            $this->getOwner(),
             $this->getDescription(),
             $this->getSubTasks()
             ->filter(fn ($task) => $task && $task instanceof self)
-            ->map(fn (self $task) => new TaskDTO($task->getId(), $task->getName(), $task->getDescription()))
+            ->map(fn (self $task) => new TaskDTO($task->getId(), $task->getName(), $task->getOwner(), $task->getDescription(), completedAt: $task->getCompletedAt())),
+            $this->getCompletedAt(),
         );
+    }
+
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): self
+    {
+        $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getCompletedAt(): ?\DateTimeImmutable
+    {
+        return $this->completedAt;
+    }
+
+    public function setCompletedAt(?\DateTimeImmutable $completedAt): self
+    {
+        $this->completedAt = $completedAt;
+
+        return $this;
     }
 }

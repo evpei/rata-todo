@@ -1,10 +1,13 @@
-### TODO
+namespace App\Controller;
+
+interface TokenAuthenticatedController
+{
+    // ...
+}### TODO
 
 ##### Implementation
 - DTO to persist the request Data
   + Factory, Static Constructor, Named Arguments in Constructor
-
-- Repository should handle all the fun I guess
 
 
 

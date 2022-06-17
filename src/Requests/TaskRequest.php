@@ -2,49 +2,51 @@
 
 namespace App\Requests;
 
-use Exception;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Validator\Constraints as Constraints;
-use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Contracts\Service\Attribute\Required;
 
-class TaskRequest {
-
+class TaskRequest extends ApiKeyRequest 
+{
     private Request $request;
 
     public function __construct(
         ?RequestStack $requestStack,
-        private ValidatorInterface $validator)
-    {
+        private ValidatorInterface $validator,
+        private UserRepository $userRepository,
+    ) {
         $this->request = $requestStack->getCurrentRequest();
+        parent::__construct($requestStack, $validator, $userRepository);
     }
 
-    #[Constraints\Length(min: 2, max:20, minMessage: 'Name too short.', maxMessage: 'Name too long.')]
-    public function getName() {
-        return $this->request->toArray()['name'];
+    #[Constraints\NotBlank(message: 'Name cannot be blank.')]
+    #[Constraints\Length(min: 2, max: 255, minMessage: 'Name too short. Cannot be shorter than {{ limit }} ', maxMessage: 'Name too long. Cannot be longer than {{ limit }}')]
+    #[Constraints\Type(type: 'string', message:'Name must be a string.')]
+    public function getName()
+    {
+        return $this->request->toArray()['name'] ?? null;
     }
 
-    #[Constraints\Length(min: 2, max: 250, minMessage: 'Description too short.', maxMessage: 'Description too long')]
-    public function getDescription() {
-        return $this->request->toArray()['name'];    }
-
-    #[Constraints\Length(min: 100, minMessage: 'Name too short.')]
-    public function getParentTaskId() {
-        return $this->request->attributes->get('parent_task_id');
+    #[Constraints\Length(max: 255, maxMessage: 'Description too long')]
+    #[Constraints\Type(type: 'string', message:'Description must be a string.')]
+    public function getDescription()
+    {
+        return $this->request->toArray()['description'] ?? null;
     }
 
-    #[Required]
-    public function validate(): void {
-        $errors = $this->validator->validate($this);
-        $errors->count() === 0 ?: $this->throwValidationException($errors);
+    #[Constraints\Positive(message: 'ParentTaskId must be positive')]
+    #[Constraints\Type(type: 'integer', message: ' {{ value }} must be an integer.')]
+    public function getParentTaskId()
+    {
+        return $this->request->toArray()['parent_task_id'] ?? null;
     }
 
-    protected function throwValidationException(ConstraintViolationListInterface $errors): never {
-        throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, (string) $errors);
+    #[Constraints\DateTime(message: '{{ value }} must be a DateTime.')]
+    public function getCompletedAt()
+    {
+        return $this->request->toArray()['completed_at'] ?? null;
     }
+    
 }

@@ -2,47 +2,30 @@
 
 namespace App\Resources\Tasks;
 
+use App\Contracts\JsonResource;
 use App\DTO\TaskDTO;
-use Doctrine\Common\Collections\ArrayCollection;
+use DateTimeImmutable;
 
-class TaskResource
+class TaskResource implements JsonResource
 {
-    public function __construct(private array $resourceData = [])
+    public function __construct(private TaskDTO $taskDTO)
     {}
 
-    public function buildResourceArray(TaskDTO $taskDTO): void
-    {
-        $this->resourceData = [
-            ...$this->taskBaseData($taskDTO->id, $taskDTO->name, $taskDTO->description),
-            'tasks' => $taskDTO->subTasks->map(fn (TaskDto $subTask) => $this->taskBaseData($subTask->id, $subTask->name, $subTask->description))->toArray(),
-        ];
-    }
-
-    private function getResourceArray(TaskDTO $taskDTO): array
+    public function toArray(): array
     {
         return [
-            ...$this->taskBaseData($taskDTO->id, $taskDTO->name, $taskDTO->description),
-            'tasks' => $taskDTO->subTasks->map(fn (TaskDto $subTask) => $this->taskBaseData($subTask->id, $subTask->name, $subTask->description))->toArray(),
+            ...$this->taskBaseData($this->taskDTO->id, $this->taskDTO->name, $this->taskDTO->description),
+            'tasks' => $this->taskDTO->subTasks->map(fn (TaskDto $subTask) => $this->taskBaseData($subTask->id, $subTask->name, $subTask->description))->toArray(),
         ];
     }
-
-    public function buildResourcesArray(TaskDTO ...$tasks): void
-    {
-        $this->resourceData = (new ArrayCollection($tasks))
-        ->map(fn (TaskDTO $task) => $this->getResourceArray($task))
-        ->toArray();
-    }
-
-    public function getResourceData(): array {
-        return $this->resourceData;
-    }
-
-    private function taskBaseData(int $id, string $name, ?string $description): array
+    
+    private function taskBaseData(int $id, string $name, ?string $description, ?DateTimeImmutable $completedAt = null): array
     {
         return [
             'id' => $id,
             'name' => $name,
             'description' => $description,
+            'completed_at' => is_null($completedAt) ? null : $completedAt->format('Y-m-d H:i:s'),
         ];
     }
 }
